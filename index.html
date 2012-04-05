@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="jInstagram : A java wrapper for the instagram api" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>jInstagram</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/sachin-handiekar/jInstagram">Fork Me on GitHub</a>
+
+          <h1 id="project_title">jInstagram</h1>
+          <h2 id="project_tagline">A java wrapper for the instagram api</h2>
+
+          <section id="downloads">
+            <a class="zip_download_link" href="https://github.com/sachin-handiekar/jInstagram/zipball/master">Download this project as a .zip file</a>
+            <a class="tar_download_link" href="https://github.com/sachin-handiekar/jInstagram/tarball/master">Download this project as a tar.gz file</a>
+          </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>Welcome to jInstagram.</h1>
+
+<p>A java wrapper for the Instagram API.</p>
+
+<h3>Usage</h3>
+
+<ul>
+<li>Create the InstagramService object</li>
+</ul><div class="highlight">
+<pre><span class="n">InstagramService</span> <span class="n">service</span> <span class="o">=</span>  <span class="k">new</span> <span class="n">InstagramAuthService</span><span class="o">()</span>
+                                <span class="o">.</span><span class="na">apiKey</span><span class="o">(</span><span class="s">"your_client_id"</span><span class="o">)</span>
+                                <span class="o">.</span><span class="na">apiSecret</span><span class="o">(</span><span class="s">"your_client_secret"</span><span class="o">)</span>
+                                <span class="o">.</span><span class="na">callback</span><span class="o">(</span><span class="s">"your_callback_url"</span><span class="o">)</span>     
+                                <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</pre>
+</div>
+
+
+<p>Note : An empty token can be define as follows -</p>
+
+<div class="highlight">
+<pre><span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Token</span> <span class="n">EMPTY_TOKEN</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</pre>
+</div>
+
+
+<ul>
+<li>Validate your user against Instagram</li>
+</ul><div class="highlight">
+<pre><span class="n">String</span> <span class="n">authorizationUrl</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">getAuthorizationUrl</span><span class="o">(</span><span class="n">EMPTY_TOKEN</span><span class="o">);</span>
+</pre>
+</div>
+
+
+<ul>
+<li>Getting the Access Token </li>
+</ul><div class="highlight">
+<pre><span class="n">Verifier</span> <span class="n">verifier</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Verifier</span><span class="o">(</span><span class="s">"verifier you get from the user"</span><span class="o">);</span>
+<span class="n">Token</span> <span class="n">accessToken</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">getAccessToken</span><span class="o">(</span><span class="n">EMPTY_TOKEN</span><span class="o">,</span> <span class="n">verifier</span><span class="o">);</span>
+</pre>
+</div>
+
+
+<ul>
+<li>Creating the Instagram Object</li>
+</ul><div class="highlight">
+<pre><span class="n">Instagram</span> <span class="n">instagram</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Instagram</span><span class="o">(</span><span class="n">accessToken</span><span class="o">);</span>
+</pre>
+</div>
+
+
+<h4>Instagram API Endpoints</h4>
+
+<p>Please see the <a href="https://github.com/sachin-handiekar/jInstagram/wiki/jInstagram-Usage">API Usage</a> for more details.</p>
+
+<h3>Dependencies</h3>
+
+<ul>
+<li>Google GSON (<a href="http://code.google.com/p/google-gson/">http://code.google.com/p/google-gson/</a>)</li>
+</ul><h2>Authors and Contributors</h2>
+
+<p><a href="/sachin-handiekar" class="user-mention">@sachin-handiekar</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">jInstagram maintained by <a href="https://github.com/sachin-handiekar">sachin-handiekar</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
