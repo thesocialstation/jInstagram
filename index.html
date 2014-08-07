@@ -29,12 +29,16 @@
       <div class="inner clearfix">
         <section id="main-content">
           <h1>
-<a name="welcome-to-jinstagram" class="anchor" href="#welcome-to-jinstagram"><span class="octicon octicon-link"></span></a>Welcome to jInstagram.</h1>
+<a name="jinstagram" class="anchor" href="#jinstagram"><span class="octicon octicon-link"></span></a>jInstagram</h1>
 
-<p>A java wrapper for the Instagram API.</p>
+<p><a href="https://travis-ci.org/sachin-handiekar/jInstagram"><img src="https://travis-ci.org/sachin-handiekar/jInstagram.png" alt="Build Status"></a></p>
 
-<h3>
-<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h3>
+<p>An unofficial Java library for the <a href="http://instagram.com/developer/">Instagram API</a>.</p>
+
+<p>Note : jInstagram uses code from the <a href="https://github.com/fernandezpablo85/scribe-java">scribe-java</a> library developed by <a href="https://github.com/fernandezpablo85">Pablo Fernandez</a>. </p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
 
 <ul>
 <li>Create the InstagramService object</li>
@@ -42,6 +46,20 @@
                                 <span class="o">.</span><span class="na">apiKey</span><span class="o">(</span><span class="s">"your_client_id"</span><span class="o">)</span>
                                 <span class="o">.</span><span class="na">apiSecret</span><span class="o">(</span><span class="s">"your_client_secret"</span><span class="o">)</span>
                                 <span class="o">.</span><span class="na">callback</span><span class="o">(</span><span class="s">"your_callback_url"</span><span class="o">)</span>     
+                                <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</pre></div>
+
+<p><strong>[With Scope]</strong></p>
+
+<p>Note : Multiple scopes can be provided with a space in between. For ex. <code>.scope("likes comments")</code> Please see <a href="http://instagram.com/developer/authentication/#scope">Instagram API</a> for more details regarding the supported scopes.</p>
+
+<p><strong>Commenting access</strong> - You need to register your clientId and Application Name on <a href="http://bit.ly/instacomments">http://bit.ly/instacomments</a>, to get access to commenting.</p>
+
+<div class="highlight highlight-java"><pre><span class="n">InstagramService</span> <span class="n">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InstagramAuthService</span><span class="o">()</span>
+                                <span class="o">.</span><span class="na">apiKey</span><span class="o">(</span><span class="s">"your_client_id"</span><span class="o">)</span>
+                                <span class="o">.</span><span class="na">apiSecret</span><span class="o">(</span><span class="s">"your_client_secret"</span><span class="o">)</span>
+                                <span class="o">.</span><span class="na">callback</span><span class="o">(</span><span class="s">"your_callback_url"</span><span class="o">)</span> 
+                                <span class="o">.</span><span class="na">scope</span><span class="o">(</span><span class="s">"comments"</span><span class="o">)</span>
                                 <span class="o">.</span><span class="na">build</span><span class="o">();</span>
 </pre></div>
 
@@ -66,20 +84,56 @@
 </ul><div class="highlight highlight-java"><pre><span class="n">Instagram</span> <span class="n">instagram</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Instagram</span><span class="o">(</span><span class="n">accessToken</span><span class="o">);</span>
 </pre></div>
 
-<h4>
-<a name="instagram-api-endpoints" class="anchor" href="#instagram-api-endpoints"><span class="octicon octicon-link"></span></a>Instagram API Endpoints</h4>
+<ul>
+<li>Or Creating the Instagram Object with enforce signed header (Note: Enforce signed header of the APP settings should be checked)</li>
+</ul><div class="highlight highlight-java"><pre><span class="c1">// 1. your_client_secret: do not use accessToken.getSecret(), it may be null.</span>
+<span class="c1">// 2. your IPs: comma-separated list of one or more IPs.</span>
+<span class="c1">//    You can use the 127.0.0.1 loopback address during testing.</span>
+<span class="n">Instagram</span> <span class="n">instagram</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Instagram</span><span class="o">(</span><span class="n">accessToken</span><span class="o">.</span><span class="na">getToken</span><span class="o">(),</span> <span class="s">"your_client_secret"</span><span class="o">,</span> <span class="s">"your_IPs"</span><span class="o">);</span>
+</pre></div>
+
+<h3>
+<a name="sample-projects" class="anchor" href="#sample-projects"><span class="octicon octicon-link"></span></a>Sample Projects</h3>
+
+<ul>
+<li>
+<a href="https://github.com/sachin-handiekar/jInstagram-examples">Basic Web Application</a> - A basic web application demonstrating the use of jInstagram API.</li>
+</ul><h2>
+<a name="instagram-api-endpoints" class="anchor" href="#instagram-api-endpoints"><span class="octicon octicon-link"></span></a>Instagram API Endpoints</h2>
 
 <p>Please see the <a href="https://github.com/sachin-handiekar/jInstagram/wiki/jInstagram-Usage">API Usage</a> for more details.</p>
 
-<h3>
-<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h3>
+<h2>
+<a name="instagram-embedding-endpoints" class="anchor" href="#instagram-embedding-endpoints"><span class="octicon octicon-link"></span></a>Instagram Embedding Endpoints</h2>
+
+<div class="highlight highlight-java"><pre><span class="n">InstagramOembed</span> <span class="n">oembed</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InstagramOembed</span><span class="o">();</span>
+<span class="n">OembedInformation</span> <span class="n">info</span> <span class="o">=</span> <span class="n">oembed</span><span class="o">.</span><span class="na">getOembedInformation</span><span class="o">(</span><span class="s">"http://instagram.com/p/BUG/"</span><span class="o">);</span>
+</pre></div>
+
+<h2>
+<a name="maven" class="anchor" href="#maven"><span class="octicon octicon-link"></span></a>Maven</h2>
+
+<div class="highlight highlight-xml"><pre><span class="nt">&lt;dependency&gt;</span>
+   <span class="nt">&lt;groupId&gt;</span>com.sachinhandiekar<span class="nt">&lt;/groupId&gt;</span>
+   <span class="nt">&lt;artifactId&gt;</span>jInstagram<span class="nt">&lt;/artifactId&gt;</span>
+   <span class="nt">&lt;version&gt;</span>1.0.8<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span>
+</pre></div>
+
+<h2>
+<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h2>
 
 <ul>
 <li>Google GSON (<a href="http://code.google.com/p/google-gson/">http://code.google.com/p/google-gson/</a>)</li>
 </ul><h2>
-<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h2>
+<a name="about-me" class="anchor" href="#about-me"><span class="octicon octicon-link"></span></a>About me</h2>
 
-<p><a href="https://github.com/sachin-handiekar" class="user-mention">@sachin-handiekar</a></p>
+<ul>
+<li><a href="http://uk.linkedin.com/in/sachinhandiekar">LinkedIn</a></li>
+<li>Email   : sachin.handiekar at gmail.com / sach21 at gmail.com</li>
+<li>Twitter : <a href="http://twitter.com/sachinhandiekar">@sachinhandiekar</a>
+</li>
+</ul>
         </section>
 
         <aside id="sidebar">
@@ -99,6 +153,16 @@
       </div>
     </div>
 
-  
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-53610168-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
   </body>
 </html>
