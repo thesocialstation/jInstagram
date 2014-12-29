@@ -4,8 +4,6 @@
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <meta name="description" content="jInstagram - A Java library for the Instagram API.">
-    
     <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
@@ -15,15 +13,15 @@
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <title>jInstagram - A java library for Instagram API</title>
+    <title>jInstagram by sachin-handiekar</title>
   </head>
 
   <body>
     <header>
       <div class="inner">
         <h1>jInstagram</h1>
-        <h2>An unofficial Java library for the Instagram API.</h2>
-        <a href="https://github.com/sachin-handiekar/jInstagram" class="button"><small>View project on</small>GitHub</a>
+        <h2>A java wrapper for the instagram api</h2>
+        <a href="https://github.com/sachin-handiekar/jInstagram" class="button"><small>View project on</small> GitHub</a>
       </div>
     </header>
 
@@ -31,112 +29,118 @@
       <div class="inner clearfix">
         <section id="main-content">
           <h1>
-<a name="jinstagram" class="anchor" href="#jinstagram"><span class="octicon octicon-link"></span></a>jInstagram</h1>
+<a id="jinstagram-" class="anchor" href="#jinstagram-" aria-hidden="true"><span class="octicon octicon-link"></span></a>jInstagram <a href="https://travis-ci.org/sachin-handiekar/jInstagram"><img src="https://travis-ci.org/sachin-handiekar/jInstagram.svg" alt="Build Status"></a>
+</h1>
 
- 
-<a href="http://flattr.com/thing/846144/sachin-handiekarjInstagram-on-GitHub" target="_blank"><img src="http://api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0" /></a>
+<h2>
+<a id="table-of-contents" class="anchor" href="#table-of-contents" aria-hidden="true"><span class="octicon octicon-link"></span></a><a name="toc">Table of Contents</a>
+</h2>
+
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#how-to-use">How to Use</a></li>
+<li><a href="#instagram-endpoints">Instagram Endpoints</a></li>
+<li><a href="#code-examples">Code Examples</a></li>
+<li><a href="#development">Development</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#donation">Donation</a></li>
+</ul>
+
+<h2>
+<a id="introduction-" class="anchor" href="#introduction-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="introduction">Introduction</a> <a href="#toc">↑</a>
+</h2>
 
 <p>An unofficial Java library for the <a href="http://instagram.com/developer/">Instagram API</a>.</p>
 
 <p>Note : jInstagram uses code from the <a href="https://github.com/fernandezpablo85/scribe-java">scribe-java</a> library developed by <a href="https://github.com/fernandezpablo85">Pablo Fernandez</a>. </p>
 
 <h2>
-<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
-
-<ul>
-<li>Create the InstagramService object</li>
-</ul><div class="highlight highlight-java"><pre><span class="n">InstagramService</span> <span class="n">service</span> <span class="o">=</span>  <span class="k">new</span> <span class="nf">InstagramAuthService</span><span class="o">()</span>
-                                <span class="o">.</span><span class="na">apiKey</span><span class="o">(</span><span class="s">"your_client_id"</span><span class="o">)</span>
-                                <span class="o">.</span><span class="na">apiSecret</span><span class="o">(</span><span class="s">"your_client_secret"</span><span class="o">)</span>
-                                <span class="o">.</span><span class="na">callback</span><span class="o">(</span><span class="s">"your_callback_url"</span><span class="o">)</span>     
-                                <span class="o">.</span><span class="na">build</span><span class="o">();</span>
-</pre></div>
-
-<p><strong>[With Scope]</strong></p>
-
-<p>Note : Multiple scopes can be provided with a space in between. For ex. <code>.scope("likes comments")</code> Please see <a href="http://instagram.com/developer/authentication/#scope">Instagram API</a> for more details regarding the supported scopes.</p>
-
-<p><strong>Commenting access</strong> - You need to register your clientId and Application Name on <a href="http://bit.ly/instacomments">http://bit.ly/instacomments</a>, to get access to commenting.</p>
-
-<div class="highlight highlight-java"><pre><span class="n">InstagramService</span> <span class="n">service</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InstagramAuthService</span><span class="o">()</span>
-                                <span class="o">.</span><span class="na">apiKey</span><span class="o">(</span><span class="s">"your_client_id"</span><span class="o">)</span>
-                                <span class="o">.</span><span class="na">apiSecret</span><span class="o">(</span><span class="s">"your_client_secret"</span><span class="o">)</span>
-                                <span class="o">.</span><span class="na">callback</span><span class="o">(</span><span class="s">"your_callback_url"</span><span class="o">)</span> 
-                                <span class="o">.</span><span class="na">scope</span><span class="o">(</span><span class="s">"comments"</span><span class="o">)</span>
-                                <span class="o">.</span><span class="na">build</span><span class="o">();</span>
-</pre></div>
-
-<p>Note : An empty token can be define as follows -</p>
-
-<div class="highlight highlight-java"><pre><span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Token</span> <span class="n">EMPTY_TOKEN</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
-</pre></div>
-
-<ul>
-<li>Validate your user against Instagram</li>
-</ul><div class="highlight highlight-java"><pre><span class="n">String</span> <span class="n">authorizationUrl</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">getAuthorizationUrl</span><span class="o">(</span><span class="n">EMPTY_TOKEN</span><span class="o">);</span>
-</pre></div>
-
-<ul>
-<li>Getting the Access Token </li>
-</ul><div class="highlight highlight-java"><pre><span class="n">Verifier</span> <span class="n">verifier</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Verifier</span><span class="o">(</span><span class="s">"verifier you get from the user"</span><span class="o">);</span>
-<span class="n">Token</span> <span class="n">accessToken</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="na">getAccessToken</span><span class="o">(</span><span class="n">EMPTY_TOKEN</span><span class="o">,</span> <span class="n">verifier</span><span class="o">);</span>
-</pre></div>
-
-<ul>
-<li>Creating the Instagram Object</li>
-</ul><div class="highlight highlight-java"><pre><span class="n">Instagram</span> <span class="n">instagram</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Instagram</span><span class="o">(</span><span class="n">accessToken</span><span class="o">);</span>
-</pre></div>
-
-<ul>
-<li>Or Creating the Instagram Object with enforce signed header (Note: Enforce signed header of the APP settings should be checked)</li>
-</ul><div class="highlight highlight-java"><pre><span class="c1">// 1. your_client_secret: do not use accessToken.getSecret(), it may be null.</span>
-<span class="c1">// 2. your IPs: comma-separated list of one or more IPs.</span>
-<span class="c1">//    You can use the 127.0.0.1 loopback address during testing.</span>
-<span class="n">Instagram</span> <span class="n">instagram</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Instagram</span><span class="o">(</span><span class="n">accessToken</span><span class="o">.</span><span class="na">getToken</span><span class="o">(),</span> <span class="s">"your_client_secret"</span><span class="o">,</span> <span class="s">"your_IPs"</span><span class="o">);</span>
-</pre></div>
-
-<h3>
-<a name="sample-projects" class="anchor" href="#sample-projects"><span class="octicon octicon-link"></span></a>Sample Projects</h3>
+<a id="how-to-use-" class="anchor" href="#how-to-use-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="how-to-use">How to Use</a> <a href="#toc">↑</a>
+</h2>
 
 <ul>
 <li>
-<a href="https://github.com/sachin-handiekar/jInstagram-examples">Basic Web Application</a> - A basic web application demonstrating the use of jInstagram API.</li>
-</ul><h2>
-<a name="instagram-api-endpoints" class="anchor" href="#instagram-api-endpoints"><span class="octicon octicon-link"></span></a>Instagram API Endpoints</h2>
+<p>Maven Integration</p>
+
+<p>If you're using Maven in your project, then you can integrate jInstagram by adding the following dependency in your pom.xml</p>
+</li>
+</ul>
+
+<div class="highlight highlight-xml"><pre>&lt;<span class="pl-ent">dependency</span>&gt;
+   &lt;<span class="pl-ent">groupId</span>&gt;com.sachinhandiekar&lt;/<span class="pl-ent">groupId</span>&gt;
+   &lt;<span class="pl-ent">artifactId</span>&gt;jInstagram&lt;/<span class="pl-ent">artifactId</span>&gt;
+   &lt;<span class="pl-ent">version</span>&gt;1.0.10&lt;/<span class="pl-ent">version</span>&gt;
+&lt;/<span class="pl-ent">dependency</span>&gt;</pre></div>
+
+<p>You can also integrate jInstagram by adding the following jar files in your project - </p>
+
+<ul>
+<li><a href="http://central.maven.org/maven2/com/sachinhandiekar/jInstagram/1.0.10/jInstagram-1.0.10.jar">jInstagram-1.0.10.jar</a></li>
+<li>
+<a href="http://central.maven.org/maven2/com/google/code/gson/gson/2.2.2/gson-2.2.2.jar">GSON</a>, <a href="http://central.maven.org/maven2/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar">commons-lang3</a>, <a href="http://central.maven.org/maven2/commons-codec/commons-codec/1.8/commons-codec-1.8.jar">commons-codec</a>, <a href="http://central.maven.org/maven2/junit/junit/4.11/junit-4.11.jar">jUnit</a>, <a href="http://central.maven.org/maven2/org/mockito/mockito-all/1.8.4/mockito-all-1.8.4.jar">mockito</a> </li>
+</ul>
+
+<h2>
+<a id="instagram-endpoints-" class="anchor" href="#instagram-endpoints-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="instagram-endpoints">Instagram Endpoints</a> <a href="#instagram-endpoints">↑</a>
+</h2>
 
 <p>Please see the <a href="https://github.com/sachin-handiekar/jInstagram/wiki/jInstagram-Usage">API Usage</a> for more details.</p>
 
 <h2>
-<a name="instagram-embedding-endpoints" class="anchor" href="#instagram-embedding-endpoints"><span class="octicon octicon-link"></span></a>Instagram Embedding Endpoints</h2>
+<a id="code-examples-" class="anchor" href="#code-examples-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="code-examples">Code Examples</a> <a href="#toc">↑</a>
+</h2>
 
-<div class="highlight highlight-java"><pre><span class="n">InstagramOembed</span> <span class="n">oembed</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">InstagramOembed</span><span class="o">();</span>
-<span class="n">OembedInformation</span> <span class="n">info</span> <span class="o">=</span> <span class="n">oembed</span><span class="o">.</span><span class="na">getOembedInformation</span><span class="o">(</span><span class="s">"http://instagram.com/p/BUG/"</span><span class="o">);</span>
-</pre></div>
-
-<h2>
-<a name="maven" class="anchor" href="#maven"><span class="octicon octicon-link"></span></a>Maven</h2>
-
-<div class="highlight highlight-xml"><pre><span class="nt">&lt;dependency&gt;</span>
-   <span class="nt">&lt;groupId&gt;</span>com.sachinhandiekar<span class="nt">&lt;/groupId&gt;</span>
-   <span class="nt">&lt;artifactId&gt;</span>jInstagram<span class="nt">&lt;/artifactId&gt;</span>
-   <span class="nt">&lt;version&gt;</span>1.0.9<span class="nt">&lt;/version&gt;</span>
-<span class="nt">&lt;/dependency&gt;</span>
-</pre></div>
+<p>Please see the sample project to see a working example of <a href="https://github.com/sachin-handiekar/jInstagram-examples">jInstagram integration</a>.</p>
 
 <h2>
-<a name="dependencies" class="anchor" href="#dependencies"><span class="octicon octicon-link"></span></a>Dependencies</h2>
+<a id="development-" class="anchor" href="#development-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="development">Development</a> <a href="#toc">↑</a>
+</h2>
 
-<ul>
-<li>Google GSON (<a href="http://code.google.com/p/google-gson/">http://code.google.com/p/google-gson/</a>)</li>
-</ul><h2>
-<a name="about-me" class="anchor" href="#about-me"><span class="octicon octicon-link"></span></a>About me</h2>
+<p>Please see the <a href="https://github.com/sachin-handiekar/jInstagram/wiki/Development-Guide">development guide</a>.</p>
 
-<ul>
-<li><a href="http://uk.linkedin.com/in/sachinhandiekar">LinkedIn</a></li>
-<li>Email   : sachin.handiekar at gmail.com / sach21 at gmail.com</li>
-<li>Twitter : <a href="http://twitter.com/sachinhandiekar">@sachinhandiekar</a>
-</li>
-</ul>
+<h2>
+<a id="license-" class="anchor" href="#license-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="license">License</a> <a href="#toc">↑</a>
+</h2>
+
+<pre><code>jInstagram is licensed under the MIT License.
+
+Copyright (C) 2011 by Sachin Handiekar
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+</code></pre>
+
+<h2>
+<a id="donation-" class="anchor" href="#donation-" aria-hidden="true"><span class="octicon octicon-link"></span></a>
+<a name="donation">Donation</a> <a href="#toc">↑</a>
+</h2>
+
+<p>jInstagram is an open-source software and free of charge. You can use jInstagram freely for any commercial and non-commercial projects.</p>
+
+<p>If you feel jInstagram makes your life easier, please do consider making a donation!</p>
+
+<p><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=WRFVX23N4TUQN"><img src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_SM.gif"></a></p>
         </section>
 
         <aside id="sidebar">
@@ -149,14 +153,9 @@
             .tar.gz file
           </a>
 
-          <p class="repo-owner">Developed by <a href="http://sachinhandiekar.com">Sachin Handiekar</a>.</p>
-          <br />
-          
-          <h3>Sponsors</h3>
-          <br />
-          <br />
-          <a href="http://www.ej-technologies.com/products/jprofiler/overview.html"><img src="http://www.ej-technologies.com/images/banners/jprofiler_medium.png"</a>
+          <p class="repo-owner"><a href="https://github.com/sachin-handiekar/jInstagram"></a> is maintained by <a href="https://github.com/sachin-handiekar">sachin-handiekar</a>.</p>
 
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
         </aside>
       </div>
     </div>
