@@ -1,9 +1,8 @@
 package org.jinstagram;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.Proxy;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,11 +26,13 @@ import org.jinstagram.entity.users.feed.MediaFeed;
 import org.jinstagram.entity.users.feed.UserFeed;
 import org.jinstagram.exceptions.InstagramException;
 import org.jinstagram.http.Response;
+import org.jinstagram.http.URLUtils;
 import org.jinstagram.http.Verbs;
 import org.jinstagram.model.Methods;
 import org.jinstagram.model.QueryParam;
 import org.jinstagram.model.Relationship;
 import org.jinstagram.utils.EnforceSignedHeaderUtils;
+import org.jinstagram.utils.EnforceSignedRequestUtils;
 import org.jinstagram.utils.LogHelper;
 import org.jinstagram.utils.Preconditions;
 import org.slf4j.Logger;
@@ -49,29 +50,33 @@ import com.google.gson.JsonSyntaxException;
 public class Instagram {
 
 	private static final Logger logger = LoggerFactory.getLogger(Instagram.class);
+
 	private Token accessToken;
 	private final String clientId;
 	private final InstagramConfig config;
-	private String enforceSignatrue;
+	private Proxy requestProxy;
+
+	@Deprecated
+	private String enforceSignature;
 
 	public Instagram(Token accessToken) {
-		this.accessToken = accessToken;
-		clientId = null;
-		config = new InstagramConfig();
+		this(accessToken, null, new InstagramConfig());
 	}
 
+	public Instagram(String token, String secret) {
+		this(new Token(token, secret), null, new InstagramConfig());
+	}
+
+	@Deprecated
 	public Instagram(String token, String secret, String ips) {
-		Token accessToken = new Token(token, secret);
-		this.accessToken = accessToken;
+		this.accessToken = new Token(token, secret);
 		clientId = null;
 		config = new InstagramConfig();
-		enforceSignatrue = createEnforceSignatrue(secret, ips);
+		enforceSignature = createEnforceSignature(secret, ips);
 	}
 
 	public Instagram(Token accessToken, InstagramConfig config) {
-		this.accessToken = accessToken;
-		clientId = null;
-		this.config = config;
+		this(accessToken, null, config);
 	}
 
 	/**
@@ -79,13 +84,35 @@ public class Instagram {
 	 * application but not any particular user)
 	 */
 	public Instagram(String clientId) {
-		this.accessToken = null;
-		this.clientId = clientId;
-		config = new InstagramConfig();
+		this(null, clientId, new InstagramConfig());
 	}
 
 	public Instagram(String clientId, InstagramConfig config) {
-		this.accessToken = null;
+		this(null, clientId, config);
+	}
+
+	/**
+	 * Private constructor
+	 *
+	 * @param accessToken the access Token object
+	 * @param clientId the client ID for unauthenticated requests
+	 * @param config the Instagram Config
+	 * @throws IllegalArgumentException if any of the arguments are invalid
+	 */
+	private Instagram(Token accessToken, String clientId, InstagramConfig config) {
+		// pre-checks
+		Preconditions.checkBothNotNull(accessToken, clientId, "accessToken and clientId cannot both be null");
+		Preconditions.checkNotNull(config, "config cannot be null");
+		if (accessToken == null) {
+			Preconditions.checkEmptyString(clientId, "clientId cannot be an empty string");
+		} else {
+			// accessToken not null, check we have secret if enforcing signed requests
+			if (config.isEnforceSignedRequest()) {
+				Preconditions.checkEmptyString(accessToken.getSecret(), "enforce signed requests need a client secret");
+			}
+		}
+
+		this.accessToken = accessToken;
 		this.clientId = clientId;
 		this.config = config;
 	}
@@ -100,6 +127,13 @@ public class Instagram {
 	public Token getAccessToken() {
 		return accessToken;
 	}
+	
+	/**
+	 * @return the clientId
+	 */
+	public String getClientId() {
+		return clientId;
+	}
 
 	/**
 	 * @param accessToken the accessToken to set
@@ -109,6 +143,13 @@ public class Instagram {
 	}
 
 	/**
+	 * @param requestProxy the proxy to set
+	 */
+	public void setRequestProxy(Proxy requestProxy) {
+		this.requestProxy = requestProxy;
+	}
+
+    /**
 	 * Get basic information about a user.
 	 *
 	 * @param userId user-id
@@ -116,8 +157,6 @@ public class Instagram {
 	 * @throws InstagramException if any error occurs.
 	 */
 	public UserInfo getUserInfo(String userId) throws InstagramException {
-
-		LogHelper.logEntrance(logger, "getUserInfo", userId);
 
 		logger.info("Getting user info for : " + userId);
 
@@ -147,11 +186,66 @@ public class Instagram {
 	 *
 	 * @return a MediaFeed object.
 	 * @throws InstagramException if any error occurs.
+     * @deprecated Any app created before Nov 17, 2015
+     * will continue to function until June 2016.
+     * After June 2016, the app will automatically
+     * be moved to Sandbox Mode if it wasn't approved
+     * through the review process.
+     * See changelog on Nov 17, 2015
+     *
+     * use getUserRecentMedia() instead
 	 */
+    @Deprecated
 	public MediaFeed getUserFeeds() throws InstagramException {
         LogHelper.logEntrance(logger, "getUserFeeds", null);
 
         return createInstagramObject(Verbs.GET, MediaFeed.class, Methods.USERS_SELF_FEED, null);
+    }
+
+    /**
+     * Get current user's recent media
+     *
+     * @return a MediaFeedObject
+     * @throws InstagramException
+     * @author tolstovdmit
+     */
+    public MediaFeed getUserRecentMedia() throws InstagramException{
+        LogHelper.logEntrance(logger, "getUserRecentMedia", null);
+        logger.info("Getting current user recent media...");
+
+        return createInstagramObject(Verbs.GET, MediaFeed.class, Methods.USERS_SELF_RECENT_MEDIA, null);
+    }
+
+    /**
+     * Get current user's recent media with parameters.
+     *
+     *
+     * @param count Count of media to return.
+     * @param minId
+     * @param maxId
+     * @return a MediaFeedObject
+     * @throws InstagramException
+     * @author tolstovdmit
+     */
+    public MediaFeed getUserRecentMedia(int count, String minId, String maxId) throws InstagramException {
+        LogHelper.logEntrance(logger, "getUserRecentMedia", "[ count : " + count + ", minId : " + minId + ", maxId : " + maxId + "]");
+        logger.info("Getting current user recent media...");
+
+        Map<String, String> params = new HashMap<String, String>();
+
+        if (maxId != null) {
+            params.put(QueryParam.MAX_ID, String.valueOf(maxId));
+        }
+
+        if (minId != null) {
+            params.put(QueryParam.MIN_ID, String.valueOf(minId));
+        }
+
+        if (count != 0) {
+            params.put(QueryParam.COUNT, String.valueOf(count));
+        }
+
+        return createInstagramObject(Verbs.GET, MediaFeed.class, Methods.USERS_SELF_RECENT_MEDIA, params);
     }
 
 	/**
@@ -162,7 +256,16 @@ public class Instagram {
 	* @param count Count of media to return.
 	* @return a MediaFeed object.
 	* @throws InstagramException if any error occurs.
+    * @deprecated Any app created before Nov 17, 2015
+    * will continue to function until June 2016.
+    * After June 2016, the app will automatically
+    * be moved to Sandbox Mode if it wasn't approved
+    * through the review process.
+    * See changelog on Nov 17, 2015
+    *
+    * use getUserRecentMedia(int count, String minId, String maxId) instead
 	*/
+    @Deprecated
 	public MediaFeed getUserFeeds(String maxId, String minId, long count) throws InstagramException {
         LogHelper.logEntrance(logger, "getUserFeeds", "[ maxId : " + maxId + ", minId : " + minId + ", count : " + count + "]");
 
@@ -193,6 +296,7 @@ public class Instagram {
 	 */
 	public MediaFeed getRecentMediaFeed(String userId) throws InstagramException {
 		Preconditions.checkEmptyString(userId, "UserId cannot be null or empty.");
+
 
 		String methodName = String.format(Methods.USERS_RECENT_MEDIA, userId);
 
@@ -349,48 +453,75 @@ public class Instagram {
 	 * @throws InstagramException if any error occurs.
 	 */
 	public UserFeed getUserFollowList(String userId) throws InstagramException {
-		Preconditions.checkEmptyString(userId, "userId cannot be null or empty.");
+	    return getUserFollowListNextPage(userId, null);
+    }
 
-		String apiMethod = String.format(Methods.USERS_ID_FOLLOWS, userId);
- 		return createInstagramObject(Verbs.GET, UserFeed.class, apiMethod, null);
+    /**
+     * Get the next page for list of 'users' the authenticated user follows.
+     *
+     * @throws InstagramException
+     */
+    public UserFeed getUserFollowListNextPage(String userId, String cursor) throws InstagramException {
+        Preconditions.checkEmptyString(userId, "userId cannot be null or empty.");
+        
+        Map<String,String> params=new HashMap<String,String>(1);
+        if(cursor != null)
+            params.put("cursor", cursor);
 
+        String apiMethod = String.format(Methods.USERS_ID_FOLLOWS, userId);
+        UserFeed userFeed = createInstagramObject(Verbs.GET, UserFeed.class, apiMethod, params);
+        
+        return userFeed;
+    }
+    /**
+     * Get the next page for list of 'users' the authenticated user follows.
+     *
+     * @param pagination
+     * @throws InstagramException
+     */
+    public UserFeed getUserFollowListNextPage(Pagination pagination) throws InstagramException {
+        return getUserFeedInfoNextPage(pagination);
     }
 
 	/**
-	 * Get the next page for list of 'users' the authenticated user follows.
-	 *
-	 * @param pagination
-	 * @throws InstagramException
-	 */
-	public UserFeed getUserFollowListNextPage(Pagination pagination) throws InstagramException {
-		return getUserFeedInfoNextPage(pagination);
-	}
-
-	/**
-	 * Get the list of 'users' the current authenticated user is followed by.
+	 * Get the list of 'users' the current given user is followed by.
 	 *
 	 * @param userId userId of the User.
 	 * @return a UserFeed object.
 	 * @throws InstagramException if any error occurs.
 	 */
 	public UserFeed getUserFollowedByList(String userId) throws InstagramException {
-		Preconditions.checkEmptyString(userId, "userId cannot be null or empty.");
-
-		String apiMethod = String.format(Methods.USERS_ID_FOLLOWED_BY, userId);
-		UserFeed userFeed = createInstagramObject(Verbs.GET, UserFeed.class, apiMethod, null);
-
-		return userFeed;
+	    return getUserFollowedByListNextPage(userId, null);
 	}
 
-	/**
-	 * Get the next page for list of 'users' the authenticated is followed by.
-	 *
-	 * @param pagination
-	 * @throws InstagramException
-	 */
-	public UserFeed getUserFollowedByListNextPage(Pagination pagination) throws InstagramException {
-		return getUserFeedInfoNextPage(pagination);
-	}
+    /**
+     * Get the next page for list of 'users' the authenticated is followed by.
+     *
+     * @param pagination
+     * @throws InstagramException
+     */
+    public UserFeed getUserFollowedByListNextPage(String userId, String cursor) throws InstagramException {
+        Preconditions.checkEmptyString(userId, "userId cannot be null or empty.");
+        
+        Map<String,String> params=new HashMap<String,String>(1);
+        if(cursor != null)
+            params.put("cursor", cursor);
+        
+        String apiMethod = String.format(Methods.USERS_ID_FOLLOWED_BY, userId);
+        UserFeed userFeed = createInstagramObject(Verbs.GET, UserFeed.class, apiMethod, params);
+
+        return userFeed;
+    }
+
+    /**
+     * Get the next page for list of 'users' the authenticated is followed by.
+     *
+     * @param pagination
+     * @throws InstagramException
+     */
+    public UserFeed getUserFollowedByListNextPage(Pagination pagination) throws InstagramException {
+        return getUserFeedInfoNextPage(pagination);
+    }
 
 	/**
 	 * Get a list of users who have requested this user's permission to follow
@@ -524,7 +655,16 @@ public class Instagram {
 	 *
 	 * @return a MediaFeed object.
 	 * @throws InstagramException if any error occurs.
+     * @deprecated Any app created before Nov 17, 2015
+     * will continue to function until June 2016.
+     * After June 2016, the app will automatically
+     * be moved to Sandbox Mode if it wasn't approved
+     * through the review process.
+     * See changelog on Nov 17, 2015
+     *
+     * No analog method was offered instead.
 	 */
+    @Deprecated
 	public MediaFeed getPopularMedia() throws InstagramException {
 		MediaFeed mediaFeed = createInstagramObject(Verbs.GET, MediaFeed.class, Methods.MEDIA_POPULAR, null);
 
@@ -686,7 +826,7 @@ public class Instagram {
 			params.put(QueryParam.COUNT, String.valueOf(count));
 		}
 
-		String apiMethod = String.format(Methods.TAGS_RECENT_MEDIA, tagName);
+        String apiMethod = String.format(Methods.TAGS_RECENT_MEDIA, URLUtils.encodeURIComponent(tagName));
 
         return createInstagramObject(Verbs.GET, TagMediaFeed.class, apiMethod, params);
     }
@@ -710,7 +850,7 @@ public class Instagram {
 			params.put(QueryParam.MAX_ID, String.valueOf(maxId));
 
 		String apiMethod = String.format(Methods.TAGS_RECENT_MEDIA, tagName);
-
+;
         return createInstagramObject(Verbs.GET, TagMediaFeed.class, apiMethod, params);
     }
 
@@ -760,14 +900,14 @@ public class Instagram {
 	 * Get a list of recent media objects from a given location.
 	 *
 	 * @param locationId a id of the Media.
-	 * @param minId Return media before this min_id.
-	 * @param maxId Return media before this max_id.
-	 * @param maxTimeStamp Return media before this max date.
-	 * @param minTimeStamp Return media after this min date.
+	 * @param minId Return media before this min_id. May be null.
+	 * @param maxId Return media before this max_id. May be null.
+	 * @param maxTimeStamp Return media before this max date. May be null.
+	 * @param minTimeStamp Return media after this min date. May be null.
 	 * @return a MediaFeed object.
 	 * @throws InstagramException if any error occurs.
 	 */
-	public MediaFeed getRecentMediaByLocation(String locationId, int minId, int maxId, Date maxTimeStamp,
+	public MediaFeed getRecentMediaByLocation(String locationId, String minId, String maxId, Date maxTimeStamp,
 			Date minTimeStamp) throws InstagramException {
 		Map<String, String> params = new HashMap<String, String>();
 
@@ -779,11 +919,11 @@ public class Instagram {
 			params.put(QueryParam.MIN_TIMESTAMP, String.valueOf(minTimeStamp.getTime() / 1000));
 		}
 
-		if (minId > 0)
-			params.put(QueryParam.MIN_ID, String.valueOf(minId));
+		if (minId != null)
+			params.put(QueryParam.MIN_ID, minId);
 
-		if (maxId > 0)
-			params.put(QueryParam.MAX_ID, String.valueOf(maxId));
+		if (maxId != null)
+			params.put(QueryParam.MAX_ID, maxId);
 
 		String apiMethod = String.format(Methods.LOCATIONS_RECENT_MEDIA_BY_ID, locationId);
 
@@ -878,44 +1018,74 @@ public class Instagram {
 	protected <T extends InstagramObject> T createInstagramObject(Verbs verbs, Class<T> clazz, String methodName,
 			Map<String, String> params) throws InstagramException {
 		Response response;
-		try {
+        String jsonResponseBody;
+ 		try {
 			response = getApiResponse(verbs, methodName, params);
+            jsonResponseBody = response.getBody();
+            LogHelper.prettyPrintJSONResponse(logger, jsonResponseBody);
 		} catch (IOException e) {
 			throw new InstagramException("IOException while retrieving data", e);
 		}
 
+        Map<String, String> responseHeaders = response.getHeaders();;
 		if (response.getCode() >= 200 && response.getCode() < 300) {
-			T object = createObjectFromResponse(clazz, response.getBody());
-			object.setHeaders(response.getHeaders());
+			T object = createObjectFromResponse(clazz, jsonResponseBody);
+			object.setHeaders(responseHeaders);
 			return object;
 		}
 
-		throw handleInstagramError(response);
+        throw handleInstagramError(response.getCode(), jsonResponseBody, responseHeaders);
 	}
 
+    @Deprecated
 	protected InstagramException handleInstagramError(Response response) throws InstagramException {
 		Gson gson = new Gson();
 		final InstagramErrorResponse error;
-		try {
+        String responseBody = response.getBody();
+        try {
 			if (response.getCode() == 400) {
-				error = InstagramErrorResponse.parse(gson, response.getBody());
-				error.setHeaders(response.getHeaders());
-				error.throwException();
+                error = InstagramErrorResponse.parse(gson, responseBody);
+                error.setHeaders(response.getHeaders());
+                error.throwException();
 			}
 			//sending too many requests too quickly;
 			//limited to 5000 requests per hour per access_token or client_id overall.  (according to spec)
 			else if (response.getCode() == 503) {
-				error = InstagramErrorResponse.parse(gson, response.getBody());
+				error = InstagramErrorResponse.parse(gson, responseBody);
 				error.setHeaders(response.getHeaders());
 				error.throwException();
 			}
 		} catch (JsonSyntaxException e) {
-			throw new InstagramException("Failed to decode error response " + response.getBody(), e,
+			throw new InstagramException("Failed to decode error response " + responseBody, e,
 					response.getHeaders());
 		}
-		throw new InstagramException("Unknown error response code: " + response.getCode() + " " + response.getBody(),
+		throw new InstagramException("Unknown error response code: " + response.getCode() + " " + responseBody,
 				response.getHeaders());
 	}
+
+    protected InstagramException handleInstagramError(long responseCode, String responseBody, Map<String,String> responseHeaders) throws InstagramException {
+        Gson gson = new Gson();
+        final InstagramErrorResponse error;
+        try {
+            if (responseCode == 400) {
+                error = InstagramErrorResponse.parse(gson, responseBody);
+                error.setHeaders(responseHeaders);
+                error.throwException();
+            }
+            //sending too many requests too quickly;
+            //limited to 5000 requests per hour per access_token or client_id overall.  (according to spec)
+            else if (responseCode == 429) {
+                error = InstagramErrorResponse.parse(gson, responseBody);
+                error.setHeaders(responseHeaders);
+                error.throwException();
+            }
+        } catch (JsonSyntaxException e) {
+            throw new InstagramException("Failed to decode error response " + responseBody, e,
+                    responseHeaders);
+        }
+        throw new InstagramException("Unknown error response code: " + responseCode + " " + responseBody,
+                responseHeaders);
+    }
 
 	/**
 	 * Get response from Instagram.
@@ -930,11 +1100,12 @@ public class Instagram {
 		String apiResourceUrl = config.getApiURL() + methodName;
 		OAuthRequest request = new OAuthRequest(verb, apiResourceUrl);
 
-		request.setConnectTimeout(config.getConnectionTimeoutMills(), TimeUnit.MILLISECONDS);
-		request.setReadTimeout(config.getReadTimeoutMills(), TimeUnit.MILLISECONDS);
+        logger.debug("Creating request for Instagram -  " + request.getUrl());
 
-		if (enforceSignatrue != null) {
-			request.addHeader(EnforceSignedHeaderUtils.ENFORCE_SIGNED_HEADER, enforceSignatrue);
+        configureConnectionSettings(request, config);
+
+		if (requestProxy != null) {
+			request.setProxy(requestProxy);
 		}
 
 		// Additional parameters in url
@@ -951,24 +1122,48 @@ public class Instagram {
 		// Add the AccessToken to the Request Url
 		if ((verb == Verbs.GET) || (verb == Verbs.DELETE)) {
 			if (accessToken == null) {
+                logger.debug("Using " + OAuthConstants.CLIENT_ID + " : " + clientId);
 				request.addQuerystringParameter(OAuthConstants.CLIENT_ID, clientId);
 			} else {
-				request.addQuerystringParameter(OAuthConstants.ACCESS_TOKEN, accessToken.getToken());
+                logger.debug("Using " + OAuthConstants.ACCESS_TOKEN + " : " + accessToken.getToken());
+                request.addQuerystringParameter(OAuthConstants.ACCESS_TOKEN, accessToken.getToken());
 			}
 		} else {
 			if (accessToken == null) {
-				request.addBodyParameter(OAuthConstants.CLIENT_ID, clientId);
+                logger.debug("Using " + OAuthConstants.CLIENT_ID + " : " + clientId);
+                request.addBodyParameter(OAuthConstants.CLIENT_ID, clientId);
 			} else {
-				request.addBodyParameter(OAuthConstants.ACCESS_TOKEN, accessToken.getToken());
+                logger.debug("Using " + OAuthConstants.ACCESS_TOKEN + " : " + accessToken.getToken());
+                request.addBodyParameter(OAuthConstants.ACCESS_TOKEN, accessToken.getToken());
 			}
 		}
 
-		response = request.send();
+		// check if we are enforcing a signed request and add the 'sig' parameter
+		if (config.isEnforceSignedRequest()) {
+			if ((verb == Verbs.GET) || (verb == Verbs.DELETE)) {
+				request.addQuerystringParameter(QueryParam.SIGNATURE, EnforceSignedRequestUtils.signature(methodName, request.getQueryStringParams(), accessToken.getSecret()));
+			} else {
+				request.addBodyParameter(QueryParam.SIGNATURE, EnforceSignedRequestUtils.signature(methodName, request.getBodyParams(), accessToken.getSecret()));
+			}
+		}
+
+        logger.debug("Sending request to Instagram...");
+        response = request.send();
 
 		return response;
 	}
 
-	protected String createEnforceSignatrue(String secret, String ips) {
+    /** configure the request with the connection settings of config */
+    public static void configureConnectionSettings(final OAuthRequest request, final InstagramConfig config) {
+        request.setConnectTimeout(config.getConnectionTimeoutMills(), TimeUnit.MILLISECONDS);
+		request.setReadTimeout(config.getReadTimeoutMills(), TimeUnit.MILLISECONDS);
+
+        // #51 Connection Keep Alive
+        request.setConnectionKeepAlive(config.isConnectionKeepAlive());
+    }
+
+	@Deprecated
+	protected String createEnforceSignature(String secret, String ips) {
 		if (null != ips) {
 			try {
 				String signature = EnforceSignedHeaderUtils.signature(secret, ips);

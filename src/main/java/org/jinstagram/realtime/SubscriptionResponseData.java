@@ -2,12 +2,13 @@ package org.jinstagram.realtime;
 
 import com.google.gson.annotations.SerializedName;
 
+@Deprecated
 public class SubscriptionResponseData {
 
 	@SerializedName("object")
 	private String object;
 
-	@SerializedName("objectId")
+	@SerializedName("object_id")
 	private String objectId;
 
 	@SerializedName("aspect")
